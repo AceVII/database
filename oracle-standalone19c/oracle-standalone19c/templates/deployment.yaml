@@ -86,9 +86,11 @@ spec:
       - name: config
         configMap:
           name: {{ .Release.Name }}-configmap
+          defaultMode: 0777
       - name: dbcheck
         configMap:
           name: {{ .Release.Name }}-dbcheck
+          defaultMode: 0777
       - name: db
         persistentVolumeClaim:
           claimName: {{ include "oracle-standalone11g.fullname" . }}
