@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  kill_user_session_procedure.sql: |-
+{{ .Files.Get "files/kill_user_session_procedure.sql" | indent 4 }}
+  db_param.sql: |-
+{{ .Files.Get "files/db_param_init.sql" | indent 4 }}
+  db_kernels.sh: |-
+{{ .Files.Get "files/db_kernels.sh" | indent 4 }}

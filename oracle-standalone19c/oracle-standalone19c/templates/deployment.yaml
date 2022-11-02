@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "oracle-standalone11g.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "oracle-standalone11g.name" . }}
+    helm.sh/chart: {{ include "oracle-standalone11g.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 100%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "oracle-standalone11g.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "oracle-standalone11g.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      securityContext:
+        runAsUser: 54321
+        runAsGroup: 54321
+        fsGroup: 54321    
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /dbcheck.sh
+            failureThreshold: 12
+            initialDelaySeconds: 300
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /dbcheck.sh
+            failureThreshold: 18
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - name: tcp
+              containerPort: 1521
+              protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+{{- if .Values.persistence.enabled }}
+          volumeMounts:
+          - mountPath: "/opt/oracle/oradata/"
+            name: db
+          - mountPath: "/docker-entrypoint-initdb.d"
+            name: config
+          - name: dbcheck
+            mountPath: "/dbcheck.sh"
+            subPath: "dbcheck.sh"
+          env:
+            - name: DB_SID
+              value: {{ .Values.image.dbSid }}
+            - name: DB_PDB
+              value: {{ .Values.image.dbPdb }}
+            - name: DB_PASSWD
+              value: {{ .Values.image.dbPassword }}
+            - name: DB_DOMAIN
+              value: {{ .Values.image.dbDomain }}
+            - name: DB_MEMORY
+              value: {{ .Values.image.dbMemory }}
+            - name: DB_BUNDLE
+              value: basic            
+      imagePullSecrets:
+        - name: "{{ tpl (.Values.image.imagePullSecrets) .}}"
+      volumes:
+      - name: config
+        configMap:
+          name: {{ .Release.Name }}-configmap
+      - name: dbcheck
+        configMap:
+          name: {{ .Release.Name }}-dbcheck
+      - name: db
+        persistentVolumeClaim:
+          claimName: {{ include "oracle-standalone11g.fullname" . }}
+{{- end }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
