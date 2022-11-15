@@ -11,7 +11,7 @@ spec:
       - namespace: ecc-sudan
   template:      
     metadata:
-      name: '{{namespace}}-vault'
+      name: '{{namespace}}-oracledb'
     spec:
       # The project the application belongs to.
       project: default
