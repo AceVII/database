@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: oracle-application-set
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - namespace: sierra
+        valuesfile: sierra_values.yaml
+      - namespace: ecc-sudan
+        valuesfile: ecc-sudan_values.yaml
+  template:      
+    metadata:
+      name: '{{namespace}}-oracledb'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/AceVII/database.git
+        targetRevision: HEAD
+        path:  ./oracle-standalone19c/oracle-standalone19c
+        helm:
+        valueFiles:
+          - $valuesfile 
