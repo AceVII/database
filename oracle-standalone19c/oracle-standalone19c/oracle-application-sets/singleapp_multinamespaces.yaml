@@ -22,7 +22,7 @@ spec:
         path:  ./oracle-standalone19c/oracle-standalone19c
         helm:
         valueFiles:
-          - https://github.com/AceVII/database/blob/master/oracle-standalone19c/oracle-standalone19c/$valuesfile 
+          - https://github.com/AceVII/database/blob/master/oracle-standalone19c/oracle-standalone19c/ecc-sudan_values.yaml 
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
